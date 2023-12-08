@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 80%;
+            display: block;
+            border: 1px solid #000;
+        }
+    </style>
+    <title>Snake Game</title>
+</head>
+<body>
+    <canvas id="snakeCanvas"></canvas>
+
+    <script>
+        // Khai báo biến
+        const canvas = document.getElementById("snakeCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const boxSize = 20;
+
+        let snake = [
+            { x: 10, y: 10 },
+        ];
+
+        let food = { x: 15, y: 15 };
+
+        let direction = "right";
+
+        let score = 0;
+
+        // Hàm vẽ
+        function draw() {
+            // Xóa canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Vẽ thức ăn
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x * boxSize, food.y * boxSize, boxSize, boxSize);
+
+            // Vẽ rắn
+            ctx.fillStyle = "green";
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillRect(snake[i].x * boxSize, snake[i].y * boxSize, boxSize, boxSize);
+            }
+
+            // Hiển thị điểm
+            ctx.fillStyle = "black";
+            ctx.font = "10px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+        }
+
+        // Hàm di chuyển rắn
+        function move() {
+            let headX = snake[0].x;
+            let headY = snake[0].y;
+
+            // Di chuyển theo hướng
+            if (direction === "right") headX++;
+            else if (direction === "left") headX--;
+            else if (direction === "up") headY--;
+            else if (direction === "down") headY++;
+
+            // Kiểm tra va chạm với tường
+            if (headX < 0 || headY < 0 || headX >= canvas.width / boxSize || headY >= canvas.height / boxSize) {
+                clearInterval(game);
+                alert("Game over! Your score: " + score + ". Press OK to restart.");
+                restartGame();
+                return;
+            }
+
+            // Kiểm tra va chạm với thân rắn
+            for (let i = 1; i < snake.length; i++) {
+                if (headX === snake[i].x && headY === snake[i].y) {
+                    clearInterval(game);
+                    alert("Game over! Your score: " + score + ". Press OK to restart.");
+                    restartGame();
+                    return;
+                }
+            }
+
+            // Kiểm tra ăn thức ăn
+            if (headX === food.x && headY === food.y) {
+                // Tăng chiều dài của rắn
+                snake.unshift({ x: headX, y: headY });
+
+                // Tạo thức ăn mới
+                food = {
+                    x: Math.floor(Math.random() * (canvas.width / boxSize)),
+                    y: Math.floor(Math.random() * (canvas.height / boxSize)),
+                };
+
+                // Cập nhật điểm
+                score++;
+            } else {
+                // Di chuyển đầu rắn
+                snake.unshift({ x: headX, y: headY });
+
+                // Giảm chiều dài của rắn
+                snake.pop();
+            }
+        }
+
+        // Hàm xử lý sự kiện cảm ứng
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Xử lý di chuyển ngang
+                if (deltaX > 0 && direction !== "left") direction = "right";
+                else if (deltaX < 0 && direction !== "right") direction = "left";
+            } else {
+                // Xử lý di chuyển dọc
+                if (deltaY > 0 && direction !== "up") direction = "down";
+                else if (deltaY < 0 && direction !== "down") direction = "up";
+            }
+        }
+
+        // Hàm khởi tạo lại trò chơi
+        function restartGame() {
+            snake = [{ x: 10, y: 10 }];
+            food = { x: 15, y: 15 };
+            direction = "right";
+            score = 0;
+            game = setInterval(main, 100);
+        }
+
+        // Hàm chính của trò chơi
+        function main() {
+            move();
+            draw();
+        }
+
+        // Bắt đầu trò chơi
+        let game = setInterval(main, 100);
+
+        // Thêm sự kiện cảm ứng cho canvas
+        canvas.addEventListener("touchstart", handleTouchStart);
+        canvas.addEventListener("touchmove", handleTouchMove);
+
+        // Xử lý thay đổi kích thước cửa sổ
+        window.addEventListener("resize", function () {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
